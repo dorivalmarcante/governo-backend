@@ -100,12 +100,17 @@ app.get('/admin/inscricoes', (req, res) => {
     let sql = 'SELECT * FROM inscricoes';
     let params = [];
 
-    if (busca) {
-        sql += ' WHERE nome_completo LIKE ? OR cpf LIKE ? OR status_aprovacao LIKE ?';
+if (busca) {
+        sql += ' WHERE LOWER(nome_completo) LIKE LOWER(?) OR cpf LIKE ? OR LOWER(status_aprovacao) LIKE LOWER(?)';
         params = [`%${busca}%`, `%${busca}%`, `%${busca}%`];
     }
     
-    sql += ' ORDER BY data_inscricao DESC';
+    sql += ` ORDER BY 
+             CASE 
+                WHEN status_aprovacao IS NULL OR status_aprovacao = '' OR status_aprovacao = 'EM ANÁLISE' THEN 0 
+                ELSE 1 
+             END ASC, 
+             data_inscricao DESC`;
 
     db.query(sql, params, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
