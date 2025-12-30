@@ -101,8 +101,8 @@ app.get('/admin/inscricoes', (req, res) => {
     let params = [];
 
     if (busca) {
-        sql += ' WHERE nome_completo LIKE ? OR cpf LIKE ?';
-        params = [`%${busca}%`, `%${busca}%`];
+        sql += ' WHERE nome_completo LIKE ? OR cpf LIKE ? OR status_aprovacao LIKE ?';
+        params = [`%${busca}%`, `%${busca}%`, `%${busca}%`];
     }
     
     sql += ' ORDER BY data_inscricao DESC';
