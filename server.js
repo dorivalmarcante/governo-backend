@@ -152,16 +152,28 @@ app.get('/inscricao/usuario/:usuario_id', (req, res) => {
 
 app.put('/inscricao/:id', (req, res) => {
     const { id } = req.params;
+    // Adicionei log para você ver no terminal o que está chegando
+    console.log("Tentando atualizar ficha ID:", id, "Dados:", req.body);
+
     const { nome_completo, cpf, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade } = req.body;
 
+    // Garante que o nome_completo será atualizado também
     const sql = `UPDATE inscricoes SET 
                  nome_completo = ?, cpf = ?, endereco = ?, 
                  renda_familiar = ?, numero_membros_familia = ?, 
-                 despesas_mensais = ?, nivel_escolaridade = ?
+                 despesas_mensais = ?, nivel_escolaridade = ?,
+                 status_aprovacao = 'EM ANÁLISE'
                  WHERE id = ?`;
 
     db.query(sql, [nome_completo, cpf, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade, id], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Erro ao atualizar.' });
+        if (err) {
+            console.error("Erro no Update:", err);
+            // Se tentar mudar o CPF para um que já existe (de outra pessoa)
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(400).json({ error: 'Este CPF já está em uso por outro cadastro.' });
+            }
+            return res.status(500).json({ error: 'Erro ao atualizar dados.' });
+        }
         res.json({ message: 'Dados atualizados com sucesso!' });
     });
 });
