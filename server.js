@@ -138,5 +138,33 @@ app.put('/admin/atualizar/:id', (req, res) => {
     });
 });
 
+app.get('/inscricao/usuario/:usuario_id', (req, res) => {
+    const { usuario_id } = req.params;
+    db.query('SELECT * FROM inscricoes WHERE usuario_id = ?', [usuario_id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length > 0) {
+            res.json(results[0]); // Retorna a ficha se existir
+        } else {
+            res.status(404).json({ message: 'Nenhuma ficha encontrada' });
+        }
+    });
+});
+
+app.put('/inscricao/:id', (req, res) => {
+    const { id } = req.params;
+    const { nome_completo, cpf, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade } = req.body;
+
+    const sql = `UPDATE inscricoes SET 
+                 nome_completo = ?, cpf = ?, endereco = ?, 
+                 renda_familiar = ?, numero_membros_familia = ?, 
+                 despesas_mensais = ?, nivel_escolaridade = ?
+                 WHERE id = ?`;
+
+    db.query(sql, [nome_completo, cpf, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade, id], (err, result) => {
+        if (err) return res.status(500).json({ error: 'Erro ao atualizar.' });
+        res.json({ message: 'Dados atualizados com sucesso!' });
+    });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => { console.log(`Servidor seguro rodando na porta ${PORT}`); });
