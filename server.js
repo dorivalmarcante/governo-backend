@@ -83,10 +83,20 @@ app.post('/login', (req, res) => {
 
 app.post('/inscricao', (req, res) => {
     const { usuario_id, nome_completo, cpf, idade, genero, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade } = req.body;
+    
+    // --- CORREÇÃO: TRATAMENTO DE DADOS VAZIOS ---
+    // Se vier vazio (''), transforma em NULL para o banco não dar erro
+    const valIdade = idade === '' ? null : idade;
+    const valRenda = renda_familiar === '' ? null : renda_familiar;
+    const valMembros = numero_membros_familia === '' ? null : numero_membros_familia;
+    const valDespesas = despesas_mensais === '' ? null : despesas_mensais;
+
     const sql = `INSERT INTO inscricoes (usuario_id, nome_completo, cpf, idade, genero, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    db.query(sql, [usuario_id, nome_completo, cpf, idade, genero, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade], (err, result) => {
+    // Note que usamos as variáveis val... no lugar das originais
+    db.query(sql, [usuario_id, nome_completo, cpf, valIdade, genero, endereco, valRenda, valMembros, valDespesas, nivel_escolaridade], (err, result) => {
         if (err) {
+            console.error("Erro SQL:", err); // Ajuda a ver o erro no Log
             if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'CPF já cadastrado.' });
             return res.status(500).json({ error: err.message });
         }
@@ -166,9 +176,13 @@ app.get('/inscricao/usuario/:usuario_id', (req, res) => {
 
 app.put('/inscricao/:id', (req, res) => {
     const { id } = req.params;
-    console.log("Atualizando ficha ID:", id, req.body);
-
     const { nome_completo, cpf, idade, genero, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade } = req.body;
+
+    // --- CORREÇÃO: TRATAMENTO DE DADOS VAZIOS ---
+    const valIdade = idade === '' ? null : idade;
+    const valRenda = renda_familiar === '' ? null : renda_familiar;
+    const valMembros = numero_membros_familia === '' ? null : numero_membros_familia;
+    const valDespesas = despesas_mensais === '' ? null : despesas_mensais;
 
     const sql = `UPDATE inscricoes SET 
                  nome_completo = ?, cpf = ?, idade = ?, genero = ?, endereco = ?, 
@@ -177,7 +191,7 @@ app.put('/inscricao/:id', (req, res) => {
                  status_aprovacao = 'EM ANÁLISE'
                  WHERE id = ?`;
 
-    db.query(sql, [nome_completo, cpf, idade, genero, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade, id], (err, result) => {
+    db.query(sql, [nome_completo, cpf, valIdade, genero, endereco, valRenda, valMembros, valDespesas, nivel_escolaridade, id], (err, result) => {
         if (err) {
             if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Este CPF já está em uso.' });
             return res.status(500).json({ error: 'Erro ao atualizar dados.' });
