@@ -97,20 +97,29 @@ app.post('/inscricao', (req, res) => {
 app.get('/admin/inscricoes', (req, res) => {
     const { busca } = req.query;
     
-    let sql = 'SELECT * FROM inscricoes';
+    // MUDANÇA AQUI: Adicionamos o JOIN para pegar o email da tabela usuarios
+    // Selecionamos TUDO da inscricoes (i.*) e só o EMAIL do usuario (u.email)
+    let sql = `
+        SELECT i.*, u.email 
+        FROM inscricoes i
+        JOIN usuarios u ON i.usuario_id = u.id
+    `;
+    
     let params = [];
 
-if (busca) {
-        sql += ' WHERE LOWER(nome_completo) LIKE LOWER(?) OR cpf LIKE ? OR LOWER(status_aprovacao) LIKE LOWER(?)';
+    if (busca) {
+        // Ajustamos o filtro para usar o alias 'i' e 'u'
+        sql += ' WHERE LOWER(i.nome_completo) LIKE LOWER(?) OR i.cpf LIKE ? OR LOWER(i.status_aprovacao) LIKE LOWER(?)';
         params = [`%${busca}%`, `%${busca}%`, `%${busca}%`];
     }
     
+    // Ordenação inteligente (Pendentes primeiro)
     sql += ` ORDER BY 
              CASE 
-                WHEN status_aprovacao IS NULL OR status_aprovacao = '' OR status_aprovacao = 'EM ANÁLISE' THEN 0 
+                WHEN i.status_aprovacao IS NULL OR i.status_aprovacao = '' OR i.status_aprovacao = 'EM ANÁLISE' THEN 0 
                 ELSE 1 
              END ASC, 
-             data_inscricao DESC`;
+             i.data_inscricao DESC`;
 
     db.query(sql, params, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
