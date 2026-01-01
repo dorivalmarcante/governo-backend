@@ -87,20 +87,15 @@ app.post('/login', (req, res) => {
 
 app.post('/inscricao', (req, res) => {
     const { usuario_id, nome_completo, cpf, idade, genero, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade } = req.body;
-    
-    // --- CORREÇÃO: TRATAMENTO DE DADOS VAZIOS ---
-    // Se vier vazio (''), transforma em NULL para o banco não dar erro
     const valIdade = idade === '' ? null : idade;
     const valRenda = renda_familiar === '' ? null : renda_familiar;
     const valMembros = numero_membros_familia === '' ? null : numero_membros_familia;
     const valDespesas = despesas_mensais === '' ? null : despesas_mensais;
-
     const sql = `INSERT INTO inscricoes (usuario_id, nome_completo, cpf, idade, genero, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    // Note que usamos as variáveis val... no lugar das originais
     db.query(sql, [usuario_id, nome_completo, cpf, valIdade, genero, endereco, valRenda, valMembros, valDespesas, nivel_escolaridade], (err, result) => {
         if (err) {
-            console.error("Erro SQL:", err); // Ajuda a ver o erro no Log
+            console.error("Erro SQL:", err);
             if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'CPF já cadastrado.' });
             return res.status(500).json({ error: err.message });
         }
@@ -110,9 +105,7 @@ app.post('/inscricao', (req, res) => {
 
 app.get('/admin/inscricoes', (req, res) => {
     const { busca } = req.query;
-    
-    // MUDANÇA AQUI: Adicionamos o JOIN para pegar o email da tabela usuarios
-    // Selecionamos TUDO da inscricoes (i.*) e só o EMAIL do usuario (u.email)
+
     let sql = `
         SELECT i.*, u.email 
         FROM inscricoes i
@@ -122,12 +115,10 @@ app.get('/admin/inscricoes', (req, res) => {
     let params = [];
 
     if (busca) {
-        // Ajustamos o filtro para usar o alias 'i' e 'u'
         sql += ' WHERE LOWER(i.nome_completo) LIKE LOWER(?) OR i.cpf LIKE ? OR LOWER(i.status_aprovacao) LIKE LOWER(?)';
         params = [`%${busca}%`, `%${busca}%`, `%${busca}%`];
     }
     
-    // Ordenação inteligente (Pendentes primeiro)
     sql += ` ORDER BY 
              CASE 
                 WHEN i.status_aprovacao IS NULL OR i.status_aprovacao = '' OR i.status_aprovacao = 'EM ANÁLISE' THEN 0 
@@ -171,7 +162,7 @@ app.get('/inscricao/usuario/:usuario_id', (req, res) => {
     db.query('SELECT * FROM inscricoes WHERE usuario_id = ?', [usuario_id], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         if (results.length > 0) {
-            res.json(results[0]); // Retorna a ficha se existir
+            res.json(results[0]);
         } else {
             res.status(404).json({ message: 'Nenhuma ficha encontrada' });
         }
@@ -181,8 +172,6 @@ app.get('/inscricao/usuario/:usuario_id', (req, res) => {
 app.put('/inscricao/:id', (req, res) => {
     const { id } = req.params;
     const { nome_completo, cpf, idade, genero, endereco, renda_familiar, numero_membros_familia, despesas_mensais, nivel_escolaridade } = req.body;
-
-    // --- CORREÇÃO: TRATAMENTO DE DADOS VAZIOS ---
     const valIdade = idade === '' ? null : idade;
     const valRenda = renda_familiar === '' ? null : renda_familiar;
     const valMembros = numero_membros_familia === '' ? null : numero_membros_familia;
