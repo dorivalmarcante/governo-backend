@@ -30,6 +30,10 @@ db.getConnection((err, connection) => {
     }
 });
 
+app.get('/', (req, res) => {
+    res.status(200).send('Servidor Online 🟢');
+});
+
 app.post('/cadastro', async (req, res) => {
     const { nome, email, senha } = req.body;
     
