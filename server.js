@@ -121,7 +121,7 @@ app.get('/admin/inscricoes', (req, res) => {
     
     sql += ` ORDER BY 
              CASE 
-                WHEN i.status_aprovacao IS NULL OR i.status_aprovacao = '' OR i.status_aprovacao = 'EM ANÁLISE' THEN 0 
+                WHEN i.status_aprovacao IS NULL OR i.status_aprovacao = '' OR i.status_aprovacao = 'PENDENTE' OR i.status_aprovacao = 'EM ANÁLISE' THEN 0 
                 ELSE 1 
              END ASC, 
              i.data_inscricao DESC`;
