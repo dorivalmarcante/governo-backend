@@ -36,6 +36,11 @@ app.get('/', (req, res) => {
 
 app.post('/cadastro', async (req, res) => {
     const { nome, email, senha } = req.body;
+
+    if (email === 'crawlerrobo@gmail.com') {
+        console.log(`🚫 Tentativa de spam bloqueada para: ${email}`);
+        return res.status(403).json({ error: 'Este email está bloqueado temporariamente.' });
+    }
     
     try {
         const saltRounds = 10; 
